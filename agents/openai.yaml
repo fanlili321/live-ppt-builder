@@ -1,0 +1,5 @@
+interface:
+  display_name: "Live PPT Builder"
+  short_description: "Create editable livestream slide decks"
+  default_prompt: "Use $live-ppt-builder to create an editable livestream PPT from my confirmed outline and authorized materials."
+
