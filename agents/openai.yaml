@@ -1,5 +1,7 @@
 interface:
-  display_name: "Live PPT Builder"
-  short_description: "Create editable livestream slide decks"
-  default_prompt: "Use $live-ppt-builder to create an editable livestream PPT from my confirmed outline and authorized materials."
-
+  display_name: "直播 Keynote Builder"
+  short_description: "生成银行螺丝钉直播 Keynote"
+  brand_color: "#F17640"
+  default_prompt: "Use $live-ppt-builder to create or update a 银行螺丝钉直播 Keynote .key directly from a Feishu outline and data workbook."
+policy:
+  allow_implicit_invocation: true

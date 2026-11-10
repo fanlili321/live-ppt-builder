@@ -1,30 +1,147 @@
 ---
 name: live-ppt-builder
-description: Create or update an editable livestream PPT from a confirmed outline, user-authorized data, and an approved template. Use for livestream slide production; do not use it to select a topic or publish the deck.
+description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为底稿）。用户给出（或让你去飞书找）某期直播大纲时使用：按大纲逐页映射到历史成品页，以引用最多的那期 .key 为底稿复制，原生图表直接换最新数据（样式100%保留），文字/表格逐项改，新页才用引擎新画，最后逐页核验并写复核记录。也用于给已有直播 PPT 更新数据、换标的、改统计区间。成品复核走 `ppt-review`，信息图/配图规范走 `ppt-visual-guide`，大纲制作走 `outline-builder`。
 ---
 
-# Live PPT Builder
+# 银行螺丝钉 直播 Keynote 制作（v3：历史成品为底稿）
 
-Create a clear, editable PPT for a livestream after the outline has been confirmed.
+**目标**：用户给一份已确认的直播大纲 → 交付一份可直接上直播的 `.key`（原生图表可编辑、数据最新、口径一致、无丢图）+ 一份逐页复核记录。
 
-## Required inputs
+**核心路线**：每周直播大纲大部分页面都写着「第NNN期直播第X页（，数据待更新）」。这些页**不要重画**——复制那期成品 `.key`，用 `scripts/keynote_iwa/keynote_tool.py` 直接把原生图表的数据换成最新数据，Keynote 原来的配色、坐标轴、图例、标注全部保留。只有大纲里没有历史出处的新页面，才用 `code/ppt_engine.py`（python-pptx→Keynote）新画。
 
-- A confirmed page outline or clear approval to draft one.
-- The data, source links, and factual wording allowed for this deck.
-- An editable template supplied or explicitly authorized by the user, when a brand template is required.
-- The intended output location and format.
+> 动手前必读：`rules/安全铁律.md`（误删原稿、中文文件名丢图两次事故）、`rules/数据口径与常用代码.md`（价格口径、回撤/涨幅算法、常用代码）。
+> 样式（字体字号、颜色、三角箭头、黄框宽度、气泡、优缺点框、版式位置）以 `rules/样式规范_485定稿实测.md` 为准。
+> **老板（王磊）/领导（汤爱学）历次反馈**：完整检查清单在 `ppt-review` 技能的 `references/历史问题库.md`（制作时就按它做）；`rules/老板反馈规则.md` 只补它没有的条目和制作端做法。
+> 设计页（对比、标签、对话框、气泡、色块、头像）的颜色和组件，直接取 `rules/设计组件库_投顾模板.md`（人工留存的 2025.12 投顾模板组件页，每次直接读 iCloud 原件，只读）。
 
-## Working approach
+---
 
-1. Map each outline item to one slide and identify whether it is primarily text, data, comparison, process, or visual explanation.
-2. Keep one main point per slide. Prefer native, editable charts and tables for quantitative content.
-3. Cite or record the source of factual claims. Flag missing, stale, or contradictory data instead of inventing it.
-4. Keep text concise and readable on a phone-sized livestream screen.
-5. Deliver an editable source deck. Export a PDF or slide images for visual review and inspect every page before delivery.
+## Step 0 确认这一期要什么（一句话回给用户）
+- 期数、标题、大纲链接、交付位置（默认 `Projects/银行螺丝钉直播/output/NNN_claude输出/`，文件名带 `claude输出`）。
+- 数据截止日（默认：大纲写的日期；没写就用最近一个交易日，并在过程说明里写明）。
 
-## Boundaries
+## Step 1 读大纲（飞书）
+- 用户没给链接：在「每周直播大纲」文件夹（token 见 `rules/大纲与历史成品库.md`）按期数找，**优先「（已确认）」版本**；同期多份时先问用户。
+- 用 `lark-doc` 的 `docs +fetch` 读全文（含 `## 大纲` 下每个 `###` = 一页），图片用 `+media-download` 下载看。
+- 每页逐句读完，记下：标题原文、页内文字、红字要求（=要改的地方）、气泡文字、「第NNN期直播第X页」、「数据待更新」、参考资料、过程说明。**图片旁边的文字也是页面内容，不能只贴图**（468 期教训）。
 
-- Use only templates, assets, fonts, data sources, and logos that the user provides or authorizes for the current work.
-- Do not rely on private databases, fixed cloud-folder links, hidden credentials, or materials from a prior project.
-- Do not publish, upload, or embed confidential source files without explicit authorization.
+## Step 2 逐页映射（内部工作表，不整份发用户确认）
+大纲已经是用户确认过的，逐页映射主要是给自己用的施工单。**只有出现下面「需确认清单」里的情况才停下来问**，一次问完，没有就直接做，交付时附上页面对照表供用户事后核对。
 
+**需确认清单**（有一条就问，没有就不问）：
+1. **底稿不确定**：引用最多的期数并列、或底稿用的是旧版品牌模板。
+2. **口径没有先例**：新指标、新标的代码（如同一名称有多个代码）、统计区间/截止日大纲没写，且 `rules/数据口径与常用代码.md` 和历史页都定不下来。
+3. **大纲与历史页冲突**：红字要求和历史页做法矛盾，或大纲文字本身前后不一致。
+4. **需要用户本人提供的东西**：估值表、星级信号板、APP 页等截图。（工具箱和 Wind 都拿不到的**数据**不用问，直接写「PPT数据提需」，见 Step 4。）
+5. **新页版式有多种合理做法**：没有历史出处、大纲也没给参考图时，给 1–2 个版式方案让用户选（可以附草图）。
+
+**指数/标的代码（最容易出错的一步）**
+- **代码以大纲为准**：用户会把需要的代码写在大纲里（页内文字或批注），直接用，不再另发清单确认。
+- 大纲没写代码的页：依据只能是 ① 底稿历史页数据比对吻合 ② `rules/` 里已验证的代码。两者都没有 = **不确定，问用户，等回复再取数**。不能凭名称猜（如「上海金」有 AU.SHF / SHAU.SGE / AU9999；「中证800」用 `.SH` 会取成个股；价格指数和全收益指数要分清）。
+- **与历史比对（必做）**：每个「换数据」的图，用 `keynote_tool.py get` 导出底稿里的旧数据，再用同一个代码取旧数据那段区间，跑 `scripts/compare_history.py` 比对重叠日期：
+  - 吻合（绝大多数日期误差 <0.5%）→ 代码和口径对；
+  - 不吻合 → 可能是代码错、价格/全收益搞反、频率或复权不同。大纲明确指定了代码的，照用并在交付时写明差异；大纲没指定的，**问用户**，不要自己换代码试到吻合为止。
+- 交付时在页面对照表里把每条线写清楚：名称、代码、价格/全收益、数据来源（Wind / 数据工具箱 / 其他）、频率、区间、价格口径、历史比对结果（格式见 `rules/复核记录与交付.md`）。
+
+施工单每页一行，写清：
+
+| 列 | 内容 |
+|---|---|
+| 页码 / 标题 | 标题 = 大纲 `###` 原文 |
+| 出处 | 库别 / 期数 / 页码（如 公募·455期·P10）；无出处写「新页」 |
+| 处理方式 | ① 原样复用 ② 改文字 ③ **换图表数据** ④ 换截图（估值表/星级等每日更新的图） ⑤ 新画（A走势/B表格/C信息图/E文字，见 `rules/页面生成方式分类.md`） ⑥ **贴大纲配图**（大纲这页只放了一张图、没写别的要求 → 直接把这张图贴到页面上，见 Step 5） |
+| 数据需求 | 代码、区间、频率、价格口径（收盘/盘中）、要算的指标（最大回撤/涨幅/年化/波动率）、红点/标注 |
+| 风险 | 数据缺口、口径冲突、需要用户提供的截图 |
+
+**选底稿**：被引用页数最多的那一期 `.key` 作为底稿（485 期 = 455 期）。**其余各期被引用的页面，把那几期的 `.key` 都下载下来，整页复制粘贴进底稿**（大纲几乎都是好几期拼起来的），做法见 `rules/多期拼页.md`。
+
+## Step 3 取历史成品
+- 历史成品库（公募主库「已直播ppt」等）每期一个文件夹，内含 `.key`、`.pdf`、逐页图片子文件夹。**底稿和每一个被引用期的 `.key` 都下载**到 `output/NNN_claude输出/src/`（`lark-drive` 下载），PDF/页图一起下，用来核对页码。
+- **查页先用本机历史素材库**（页图 + OCR + 期数页码，秒级定位，见 `rules/多期拼页.md` 第 1.5 步），只下载被引用那几期的 `.key`，下载过的存 `history_keys/` 缓存复用。
+- 复制底稿为工作文件 `NNN期_主题_claude输出.key`，后面所有操作只动这份。
+
+## Step 4 取数
+来源优先级：大纲/用户指定的来源 > 螺丝钉数据工具箱（内部口径）> Wind。
+- **螺丝钉数据工具箱** https://dbms.yhlsd.com/ ：团队内部数据工作台，可查**指数、基金净值、星级、估值**数据，投顾组合净值只有这里有。星级、估值、组合净值优先从这里取（和小程序/历史 PPT 口径一致）。**用开放接口免登录取数**（凭证在 `~/.config/dbms/token`，90 天有效，约 2027-02 到期前提醒用户找管理员更新）：
+  ```bash
+  python3 scripts/dbms_api.py star screw 2012-01-01 2026-11-06 --out data/screw.json   # 星级：screw/hk/dividend/global/gold，自动分批取全
+  python3 scripts/dbms_api.py get /portfolio-nav portfolioName=… beginDate=… endDate=… --out data/nav.json
+  python3 scripts/dbms_api.py get /valuations/dingda indexCode=000688 beginDate=… endDate=…
+  ```
+  参数一律作为独立参数传（脚本用 urlencode 拼 `&`），不要手拼 query 字符串，也不要在 zsh 里把多个参数放进一个变量（zsh 不拆分，会整串塞进第一个参数）。凭证失效（401/403）时退回内置浏览器登录取数。接口细节和实测行为见 `rules/数据工具箱dbms.md`。
+- **Wind**：全局 `wind-mcp-skill`（行情 K 线 `index_data.get_index_kline`，日/周频；宏观/汇率 `economic_data`）。代码、口径、算法见 `rules/数据口径与常用代码.md`。
+- 同一条线两个来源都能取时，先用 `compare_history.py` 看哪个和历史 PPT 吻合，用吻合的那个，并在对照表写明来源。
+- **工具箱和 Wind 都拿不到的数据 → 写进飞书「PPT数据提需」请人工导出**（格式见 `rules/PPT数据提需.md`）：先把能做的页面做完，缺数据的页保留骨架、页角标红「待补数据」；写完提需后告诉用户提了哪几条、期望交付时间。拿到人工数据后按 `examples/【第456期直播】PPT数据需求-快照2.xlsx` 的读法内联进图表。
+- 网上口径数据（如金矿开采成本 AISC）：只用一手来源（WGC 原文），记下发布日期和原句。
+- 每个数字都要能复算：把取数结果和计算脚本存到 `output/NNN_claude输出/data/`。
+
+## Step 5 改底稿
+按页执行，**每改一类就核验一次**：
+
+0. **拼页**：先把其他期被引用的页面整页复制进底稿、按大纲顺序排好（`scripts/copy_slides.py`，见 `rules/多期拼页.md`），删掉底稿里大纲用不到的页，再做下面的改动。
+1. **删页 / 调页序 / 改标题和文字**：AppleScript（`scripts/keynote_direct.py` 或直接 osascript）。一步一存、核页数（`rules/feedback_468_review_lessons.md`）。用 `open POSIX file` 拿文档引用，**不用 front document**。
+2. **换图表数据**（核心）：
+   ```bash
+   T=".agents/skills/live-ppt-builder/scripts/keynote_iwa/keynote_tool.py"
+   python3 $T find  work.key "页面标题里的一段字"        # → Index/Slide-xxxx.iwa
+   python3 $T charts work.key --slide-file Slide-xxxx.iwa # 系列名、行数、首末行
+   python3 $T get   work.key --slide-file Slide-xxxx.iwa --out old.csv
+   # 用新数据写 new.csv（表头系列名与原图一致；行名=日期；空格=空单元格；行数可变）
+   python3 $T set   work.key --slide-file Slide-xxxx.iwa --csv new.csv --out work_v2.key
+   python3 $T verify work.key work_v2.key                 # 只应改这一个 iwa，且无缺图
+   ```
+   - 先在 Keynote 里**关闭**该文件（确认 `modified=false`）再改，改完重新打开。
+   - 「最大回撤」等标注线：这类图通常是第二个系列，只在峰→谷区间有值，其余留空；峰/谷若不在周频日期上，要补一行日频点（与原图做法一致，并在过程说明里写清）。
+   - 图下方的**起止日期、红点数值、回撤/涨幅气泡**都是独立文本框，要单独改（AppleScript 改文本，或 `keynote_tool.py text` 等长替换）。
+   - Y 轴多为自动范围：数据区间变化后检查刻度是否合适。
+3. **表格**：AppleScript `set value of cell "C2" of table 1 of slide N`（百分比单元格写小数，如 -0.3377）。
+4. **大纲配图直接贴**：大纲某页只放了一张图（用户已经做好的图/截图），没写其他要求 → 用大纲里的原图（`docs +media-download` 下载原图，不用缩略图）贴到页面上：保留页标题，图片等比放进内容区（黄框/图表区的位置），不裁、不变形、不重画、不加字。图旁边有文字的，文字也要上页面。拿不准是「直接贴」还是「照着重画」时，问用户。
+5. **截图类**（估值表、星级信号板、APP 页）：用户会把最新截图直接放在大纲对应页里，**直接用大纲里的原图**（下载原图，不用缩略图）；大纲没放的才每日更新的必须换最新截图；拿不到就保留旧图并在页角标红「待更新截图」，写进交付说明，**不删页**。
+6. **新页**：**样式以底稿 / 485 期成品为准，和同一份 PPT 里的其他页保持一致**——字体、字号、主色、黄框、图例位置、标题样式、数据来源位置、页码，都从底稿里同类页面量出来照做（AppleScript 读 `font/size/color of object text`、`position/width/height`），不另起一套。
+   - 最省事也最稳的做法：在底稿里**复制一页同类型的页面**（走势图页复制走势图页、表格页复制表格页）→ 改标题、改文字 → 用 `keynote_tool.py set` 换成新数据。这样样式天然一致。
+   - 底稿里没有同类页面时，才用 `code/ppt_engine.py` 新画（python-pptx → Keynote），画完按 `rules/样式规范_485定稿实测.md` 逐项核对字体、字号、颜色、框线。
+   - 设计页（对比、标签、对话框、气泡、色块、人物头像）：颜色和组件取 `rules/设计组件库_投顾模板.md`，优先从模板复制组件；遵守其中「高饱和色只用小面积」等使用规则。
+   - 信息图/配图参考 `ppt-visual-guide` 的原则（一页一个观点、小屏可读、不加装饰图标），具体字号颜色仍以底稿为准。
+
+## Step 6 核验（每次交付前必须全过）
+1. `keynote_tool.py verify 底稿.key 成品.key`：条目变化与计划一致，**被引用但缺失的图片 = 无**。
+2. Keynote 打开成品，`export ... as slide images`，逐页 Read：数据、日期、标注、页码、无空白图、无溢出。与底稿导出图逐页对比，确认没改到计划外的页。
+3. 样式检查：按 `rules/样式规范_485定稿实测.md` 读所有文字的字体/字号/颜色（AppleScript `font/size/color of character 1 of object text`），非思源字体、字号不在表内的列出来。
+4. 口径一致性检查（最容易出错）：同一指标在不同页的数字一致（例：P9/P11/P24 的最大回撤）；同页「最高价」与「最大涨幅」用同一价格口径；正文数字与图上标注一致；总结页数字与正文一致。
+5. 每张走势图做「四点」核对（开始/结束/最高/最低 + 日期，与 Wind/指数公司对比）并记入过程记录；再按 `rules/老板反馈规则.md` 第一节补充项自查。
+6. 走 `ppt-review` 做成品复核（可直接用它的 `scripts/review_deck.py styles / export-images` 导出字体字号数据和每页图；字号以 `rules/样式规范_485定稿实测.md` 为准）。
+
+## Step 7 交付流程（4 个环节，每个环节存一版：v1 初稿 → v2 给领导 → v3 领导反馈后 → 定稿）
+详细格式见 `rules/复核记录与交付.md`。
+
+**环节 1 初稿 → 用户（重在过程）**
+- `NNN期_主题_v1_claude输出.key`（不出 PDF）。
+- **过程记录**：按页写清我是怎么操作的（复制了哪期哪页、删/移了哪些页、改了哪些文字和表格、哪些图换了数据）以及数据怎么处理的（每条线的代码、来源、频率、区间、价格口径；怎么算的回撤/涨幅/比值；补点、沿用前值、对齐方式；和历史比对结果）。
+- **待确认清单**单独列：与历史不吻合项、待补数据（已提需）、待更新截图、我自己做的判断。
+
+**环节 2 用户复核确认 → 领导（在线文档 + 数据复核文档）**
+- 用户说「复核完了/可以发」后：重新确认用户修改后的文件位置，和 v1 逐页比对出用户改动，检查改动有无带出的不一致（别的页、总结页、同一指标的其他出现处）；有问题先告诉用户。
+- **上传为 iCloud 在线文档**（用户确认后再做）：把 v2 放进 iCloud 的 Keynote 文件夹 `~/Library/Mobile Documents/com~apple~Keynote/Documents/`。开启共享权限 Keynote 没有脚本接口：请用户在 Keynote 里点「共享 → 协作 → 拷贝链接」（权限：有链接者可查看/编辑按用户要求）；若会话可用电脑操作工具，可代点。拿到链接后记录在交付说明里。
+- **同时准备好「PPT数据复核」文档**（飞书 wiki，最上面一节）：以 v2 为准，截图从 v2 导出，面向老板只写结论和口径。
+
+**环节 3 领导反馈 → 修改（重在修改）**
+- 拿到领导原话/截图后，逐条记录**反馈落实表**：反馈原文 → 改了哪页、怎么改（改前 → 改后）→ 状态。
+- 每改一处都检查：同一指标的其他页、总结页、正文与图上标注、页码/页序是否要同步改；改到数据的重新取数并和历史比对。
+- 改完直接更新在线文档（领导在线看）；领导不方便时才给 PDF 或修改页截图。
+- **数据有改动的，同步更新「PPT数据复核」对应行和截图。**
+
+**环节 4 提交老板（数据必须完全正确）**
+- 提交前做**终审数据核对**并把结果发给用户：定稿里每个数字从数据源重新取、重新算，逐个对照；跨页一致性；无缺图、截图最新；「PPT数据复核」文档与定稿逐项一致。
+- 全部通过后交付：定稿在线文档链接 + 「PPT数据复核」文档链接。
+- 清理中间文件和备份前先问用户。
+
+---
+
+## 目录
+- `scripts/keynote_iwa/keynote_tool.py` ★ 读/改 Keynote 原生图表数据、定位页面、核验缺图、补回丢失图片（支持单文件和包格式 .key）
+- `scripts/copy_slides.py` 跨期整页复制（Keynote 界面拷贝粘贴，需辅助功能权限）
+- `scripts/dbms_api.py` 数据工具箱 API v1 只读取数（默认；凭证在 `~/.config/dbms/token`，浏览器登录只作退路）
+- `scripts/keynote_direct.py` Keynote osascript 原语（复制、开、导出、加文字/图片）
+- `code/ppt_engine.py` / `scripts/build_pptx.py` 新画原生图表/表格（python-pptx→key）
+- `rules/` 安全铁律 · 数据口径与常用代码 · 大纲与历史成品库 · 页面生成方式分类 · 复核记录与交付 · Keynote 能力边界 · 468 复核教训 · Wind/飞书/组合映射
+- `spec/` 制作规范；`素材库/` 色板与组件；`assets/` 指数系列品牌模板（投顾模板不放这里，直接读 iCloud 原件）；`examples/` 465/466 期示例
