@@ -126,7 +126,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 
 **环节 2 用户复核确认 → 领导（在线文档 + 数据复核文档）**
 - 用户说「复核完了/可以发」后：重新确认用户修改后的文件位置，和 v1 逐页比对出用户改动，检查改动有无带出的不一致（别的页、总结页、同一指标的其他出现处）；有问题先告诉用户。
-- **上传为 iCloud 在线文档**（用户确认后再做）：把 v2 放进 iCloud 的 Keynote 文件夹 `~/Library/Mobile Documents/com~apple~Keynote/Documents/`。开启共享权限 Keynote 没有脚本接口：请用户在 Keynote 里点「共享 → 协作 → 拷贝链接」（权限：有链接者可查看/编辑按用户要求）；若会话可用电脑操作工具，可代点。拿到链接后记录在交付说明里。
+- **上传为 iCloud 在线文档**（用户确认后再做）：把 v2 放进 iCloud 的 Keynote 文件夹 `~/Library/Mobile Documents/com~apple~Keynote/Documents/`，**文件名直接用 PPT 标题**（不写期数、版本、claude输出）。开启协作后不能改文件内部，改动走整页替换（见 `rules/复核记录与交付.md`）。开启共享权限 Keynote 没有脚本接口：请用户在 Keynote 里点「共享 → 协作 → 拷贝链接」（权限：有链接者可查看/编辑按用户要求）；若会话可用电脑操作工具，可代点。拿到链接后记录在交付说明里。
 - **同时准备好「PPT数据复核」文档**（飞书 wiki，最上面一节）：以 v2 为准，截图从 v2 导出，面向老板只写结论和口径。
 
 **环节 3 领导反馈 → 修改（重在修改）**
@@ -138,7 +138,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 **环节 4 提交老板（数据必须完全正确）**
 - 提交前做**终审数据核对**并把结果发给用户：定稿里每个数字从数据源重新取、重新算，逐个对照；跨页一致性；无缺图、截图最新；「PPT数据复核」文档与定稿逐项一致。
 - 全部通过后交付：定稿在线文档链接 + 「PPT数据复核」文档链接。
-- 清理中间文件和备份前先问用户。
+- **定稿后清理中间文件**（默认执行，不用再问）：`scripts/cleanup_episode.py` 先列清单，再移到废纸篓；只留定稿 .key、过程记录、scripts、原始数据。见 `rules/复核记录与交付.md`。
 
 ---
 
@@ -146,6 +146,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 - `scripts/keynote_iwa/keynote_tool.py` ★ 读/改 Keynote 原生图表数据、定位页面、核验缺图、补回丢失图片（支持单文件和包格式 .key）
 - `scripts/set_image_borders.py` 全部图片统一成标准边框（#FEAD00/6点/实线/无阴影），改样式引用 + 同步 Metadata
 - `scripts/set_frame_strokes.py` 走势图外框/卡片框描边统一成 #FEAD00/6点
+- `scripts/cleanup_episode.py` 定稿后清理一期的中间文件（移到废纸篓，默认只列清单）
 - `scripts/gui_paste_shape.js` 跨页复制形状（如 ▶ 三角），界面拷贝粘贴，需辅助功能权限
 - `scripts/copy_slides.py` 跨期整页复制（Keynote 界面拷贝粘贴，需辅助功能权限）
 - `scripts/dbms_api.py` 数据工具箱 API v1 只读取数（默认；凭证在 `~/.config/dbms/token`，浏览器登录只作退路）
