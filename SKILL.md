@@ -62,7 +62,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 - 复制底稿为工作文件 `NNN期_主题_claude输出.key`，后面所有操作只动这份。
 
 ## Step 4 取数
-来源优先级：大纲/用户指定的来源 > 螺丝钉数据工具箱（内部口径）> Wind。
+来源优先级：大纲/用户指定的来源 > 螺丝钉数据工具箱（内部口径，**指数行情也走工具箱 `/index-queries`**）> 本机 Wind MCP（只用于工具箱没有的数据，如 EDB 宏观/行业指标；它按积分计费，2026-11-12 用户要求取数和复核一律先用工具箱）。
 - **螺丝钉数据工具箱** https://dbms.yhlsd.com/ ：团队内部数据工作台，可查**指数、基金净值、星级、估值**数据，投顾组合净值只有这里有。星级、估值、组合净值优先从这里取（和小程序/历史 PPT 口径一致）。**用开放接口免登录取数**（凭证在 `~/.config/dbms/token`，90 天有效，约 2027-02 到期前提醒用户找管理员更新）：
   ```bash
   python3 scripts/dbms_api.py star screw 2012-01-01 2026-11-06 --out data/screw.json   # 星级：screw/hk/dividend/global/gold，自动分批取全
@@ -70,7 +70,8 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
   python3 scripts/dbms_api.py get /valuations/dingda indexCode=000688 beginDate=… endDate=…
   ```
   参数一律作为独立参数传（脚本用 urlencode 拼 `&`），不要手拼 query 字符串，也不要在 zsh 里把多个参数放进一个变量（zsh 不拆分，会整串塞进第一个参数）。凭证失效（401/403）时退回内置浏览器登录取数。接口细节和实测行为见 `rules/数据工具箱dbms.md`。
-- **Wind**：全局 `wind-mcp-skill`（行情 K 线 `index_data.get_index_kline`，日/周频；宏观/汇率 `economic_data`）。代码、口径、算法见 `rules/数据口径与常用代码.md`。
+- **指数行情**：`python3 scripts/dbms_api.py index-query '{"codes":["SPX.GI"],"beginDate":"…","endDate":"…","frequency":"daily","fields":["close"]}'`（周频由日频自己按周取最后一个交易日）。
+- **Wind MCP**（`wind-mcp-skill`，计费）：只在工具箱取不到时用，如 EDB 宏观/行业（`economic_data`，例：ICI 全球 ETF `J3736583/X1004149/A4596102`）。代码、口径、算法见 `rules/数据口径与常用代码.md`。
 - 同一条线两个来源都能取时，先用 `compare_history.py` 看哪个和历史 PPT 吻合，用吻合的那个，并在对照表写明来源。
 - **工具箱和 Wind 都拿不到的数据 → 写进飞书「PPT数据提需」请人工导出**（格式见 `rules/PPT数据提需.md`）：先把能做的页面做完，缺数据的页保留骨架、页角标红「待补数据」；写完提需后告诉用户提了哪几条、期望交付时间。拿到人工数据后按 `examples/【第456期直播】PPT数据需求-快照2.xlsx` 的读法内联进图表。
 - 网上口径数据（如金矿开采成本 AISC）：只用一手来源（WGC 原文），记下发布日期和原句。

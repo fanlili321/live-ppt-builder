@@ -32,7 +32,7 @@
   - **星级 `/star-ratings/{screw|hk|dividend|global}`**：参数 `begin`、`end`（YYYY-MM-DD）、`limit`（默认 100，单次最多 1000），按日期倒序，超出时 `truncated=true`。→ 一律用 `dbms_api.py star <kind> 起 止`（自动分批取全）。
     - 2026-11-10 教训：曾以为「begin+end 同传会 500」，实为测试时 zsh 不拆分变量，多个参数被当成一个字符串塞进了 begin；管理员查日志确认后已加 422 参数校验。**参数一律分开传，不要手拼 query 字符串。**`gold` 一次返回全部周度记录，日期字段是 `reportDate`（另有 `marketCutoffDate` 行情截止日，用它对齐行情）。
   - `/portfolio-nav`、`/valuations/dingda`、`/funds/{code}/nav`：`beginDate`/`endDate` 有效。
-- 不需要工具箱的数据（指数行情）直接走 Wind；工具箱只用于星级、估值、投顾组合净值、开采成本等独有数据。
+- **取数和复核一律先用工具箱（2026-11-12 用户要求）**：指数行情走 `/index-queries`，星级、估值、投顾组合净值、开采成本走对应接口；本机 Wind MCP 按积分计费，只在工具箱没有的数据（EDB 宏观/行业等）时用。
 - 基址 `https://dbms.yhlsd.com/api/v1`，请求头 `Authorization: Bearer $API_TOKEN`。权限范围：fund_nav:query、star:read、dingda_valuation:read、screw_valuation:read、research_data:read、portfolio_nav:read、index:query。
 - 接口：`GET /funds/{code}/nav`（单位净值与复权净值）、`GET /star-ratings/{type}`（screw/hk/dividend/global/gold）、`GET /valuations/dingda`（钉大估值历史，例 `?indexCode=000688&beginDate=…&endDate=…&limit=100`）、`GET /valuations/daily`（每日估值历史）、`GET /portfolio-nav`、`POST /index-queries`（Wind 指数行情）。
 - Token 由用户在工具里自己申请/生成，存到本机（如 `~/.config/dbms/token`，权限 600），脚本从文件读取；**不要把 Token 写进 skill、聊天或代码仓库**。
@@ -55,3 +55,5 @@
   - 请求体里加 `totalReturn` 之类参数会被忽略（返回仍是价格指数）——全收益只能换全收益代码。
 - **全球星级 `/star-ratings/global`** 的日期字段是 `tradeDate`（不是 ratingDate/reportDate），`dbms_api.py star` 已兼容。记录里有 `indexPrice`（=标普全球1200 收盘）和 `peRatio`（与 391 期「全球股票指数」市盈率 99.8% 吻合，2014 年起），**没有市净率**。
 - `/valuations/daily` 里没有全球指数的 PB（只有标普500、纳指100 等单个海外指数）。
+
+- **复核时注意（2026-11-12 实测）**：工具箱 `/index-queries` 的标普全球1200（SPG1200.SPI）日线在 2024 年有错位和重复值（如 2024-09-13 与 09-27 同为 3931.15），与「全球星级」接口的 `indexPrice`（另一通道，邮件同步的 VT 估值文件）对不上；遇到单点差异，用 `indexPrice` 做第三方仲裁。标普500（SPX.GI）日线 1928-01-03 起，与 391/486 期图表全序列吻合。
