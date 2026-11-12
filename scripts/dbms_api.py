@@ -85,7 +85,7 @@ def star_range(kind: str, begin: str, end: str) -> dict:
         items = d.get('items', [])
         if not items:
             break
-        key = 'ratingDate' if 'ratingDate' in items[0] else 'reportDate'
+        key = next(k for k in ('ratingDate', 'tradeDate', 'reportDate') if k in items[0])
         for x in items:
             if begin <= x[key] <= end and x[key] not in seen:
                 seen.add(x[key]); out.append(x)
@@ -93,7 +93,7 @@ def star_range(kind: str, begin: str, end: str) -> dict:
             break
         oldest = min(x[key] for x in items)
         cur = (_dt.date.fromisoformat(oldest) - _dt.timedelta(days=1)).isoformat()
-    key = 'ratingDate' if out and 'ratingDate' in out[0] else 'reportDate'
+    key = next((k for k in ('ratingDate', 'tradeDate', 'reportDate') if out and k in out[0]), 'reportDate')
     out.sort(key=lambda x: x[key])
     return {'data': out, 'meta': {'count': len(out), 'kind': kind, 'begin': begin, 'end': end}}
 
