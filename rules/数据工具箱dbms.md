@@ -45,3 +45,13 @@
   - PPT 里成本、比值和黄金星级同框出现时，要么统一口径，要么注明差异，**动手前问用户用哪套**。
 - 星级以工具箱为准（和小程序一致），如 2026-11-06 黄金星级 3.12、A股 4.87、港股 4.45、红利 4.13、全球 3.64。
 - 交付时来源写「螺丝钉数据工具箱」+ 接口/页面 + 查询条件。
+
+## 2026-11-12（486 期）补充
+- **指数行情 `POST /index-queries`（API v1，免登录）实测可用**，后端是工具箱自己的 Wind 通道，**本机 Wind MCP 积分用完时也能取**：
+  ```bash
+  python3 scripts/dbms_api.py index-query '{"codes":["SPX.GI"],"beginDate":"2026-01-01","endDate":"2026-11-11","frequency":"daily","fields":["close"]}'
+  ```
+  - `frequency` 只认 `daily`（`D/day/1d` 都报 400），`fields` 必须是数组、值小写（`close`）。返回 `data.dates[]` + `data.rows[]`（键名 `代码_close`）。单次可取 7–8 年日频，长区间分段取。
+  - 请求体里加 `totalReturn` 之类参数会被忽略（返回仍是价格指数）——全收益只能换全收益代码。
+- **全球星级 `/star-ratings/global`** 的日期字段是 `tradeDate`（不是 ratingDate/reportDate），`dbms_api.py star` 已兼容。记录里有 `indexPrice`（=标普全球1200 收盘）和 `peRatio`（与 391 期「全球股票指数」市盈率 99.8% 吻合，2014 年起），**没有市净率**。
+- `/valuations/daily` 里没有全球指数的 PB（只有标普500、纳指100 等单个海外指数）。
