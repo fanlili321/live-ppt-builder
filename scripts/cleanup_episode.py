@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """定稿后清理一期的中间文件：移到废纸篓（可在访达里「放回原处」），不永久删除。
 
-保留：定稿 .key（--keep 指定，可多个）、过程记录 md、scripts/、data/ 里的原始数据和计算结果（json/csv/xlsx/txt 等小文件）、data/received/。
+保留：过程记录 md、scripts/、data/ 里的原始数据和计算结果（json/csv/xlsx/txt 等小文件）、data/received/。
+默认不保留任何 .key（2026-11-13 用户定：定稿由用户自己上传飞书存档，本地不留在线文档副本）；确有需要才用 --keep 指定。
+旧说明：保留 --keep 指定的 .key、过程记录 md、scripts/、data/ 里的原始数据和计算结果（json/csv/xlsx/txt 等小文件）、data/received/。
 移到废纸篓：
   - data/改前备份_*.key（所有改前备份）
   - tmp/、src/（历史期 .key 复制件，缓存 history_keys/ 里还有）
   - export*/、review/ 下的页图和副本、pages*/、outline/img/
-  - 除 --keep 以外的 *.key（v1、v2、快照等中间版本）
+  - 所有 *.key（v1、v2、定稿、在线文档快照等；--keep 指定的除外）
 不碰：iCloud 在线文档、history_keys/ 缓存、用户自己的文件、Keynote 正开着的文件（检测到就跳过并提示）。
 
 用法：
-  python3 cleanup_episode.py output/NNN_claude输出 --keep 定稿.key            # 只列清单和大小（默认 dry-run）
-  python3 cleanup_episode.py output/NNN_claude输出 --keep 定稿.key --apply    # 执行：移到废纸篓
+  python3 cleanup_episode.py output/NNN_claude输出            # 只列清单和大小（默认 dry-run）
+  python3 cleanup_episode.py output/NNN_claude输出 --apply    # 执行：移到废纸篓
 """
 import argparse, os, shutil, subprocess, time
 from pathlib import Path
@@ -39,8 +41,8 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('folder'); ap.add_argument('--keep', action='append', default=[])
     ap.add_argument('--apply', action='store_true'); a = ap.parse_args()
     root = Path(a.folder).resolve(); keep = {(root / k).resolve() for k in a.keep}
-    if not keep or not all(k.exists() for k in keep):
-        raise SystemExit('必须用 --keep 指定存在的定稿文件（相对该期文件夹）')
+    if not all(k.exists() for k in keep):
+        raise SystemExit('--keep 指定的文件不存在（相对该期文件夹）')
     targets = []
     for p in root.iterdir():
         n = p.name
@@ -61,7 +63,7 @@ def main():
             print('跳过（Keynote 正开着）', t.relative_to(root)); continue
         s = size(t); total += s
         print(f'{human(s):>6}  {t.relative_to(root)}')
-    print(f'合计 {human(total)}；保留：' + '、'.join(str(k.relative_to(root)) for k in keep))
+    print(f'合计 {human(total)}；保留：' + ('、'.join(str(k.relative_to(root)) for k in keep) or '无 .key'))
     if not a.apply:
         print('（dry-run，未移动；确认后加 --apply）'); return
     trash = Path.home() / '.Trash'
