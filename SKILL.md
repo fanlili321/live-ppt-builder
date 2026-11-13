@@ -90,7 +90,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
    python3 $T charts work.key --slide-file Slide-xxxx.iwa # 系列名、行数、首末行
    python3 $T get   work.key --slide-file Slide-xxxx.iwa --out old.csv
    # 用新数据写 new.csv（表头系列名与原图一致；行名=日期；空格=空单元格；行数可变）
-   python3 $T set   work.key --slide-file Slide-xxxx.iwa --csv new.csv --out work_v2.key
+   python3 $T set   work.key --slide-file Slide-xxxx.iwa --csv new.csv --out work_v2.key   # 系列名要改时加 --rename（数量不变）
    python3 $T verify work.key work_v2.key                 # 只应改这一个 iwa，且无缺图
    ```
    - 先在 Keynote 里**关闭**该文件（确认 `modified=false`）再改，改完重新打开。
@@ -139,17 +139,20 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 **环节 4 提交老板（数据必须完全正确）**
 - 提交前做**终审数据核对**并把结果发给用户：定稿里每个数字从数据源重新取、重新算，逐个对照；跨页一致性；无缺图、截图最新；「PPT数据复核」文档与定稿逐项一致。
 - 全部通过后交付：定稿在线文档链接 + 「PPT数据复核」文档链接。
+- **定稿后又来老板反馈**：只在用户明确同意时改，流程见 `rules/复核记录与交付.md`「定稿后又来了老板反馈」（本地改 → 用户确认 → 非数据页、数据页分批替换 → 像素比对）。
 - **定稿后清理中间文件**（默认执行，不用再问）：`scripts/cleanup_episode.py` 先列清单，再移到废纸篓；只留定稿 .key、过程记录、scripts、原始数据。见 `rules/复核记录与交付.md`。
 
 ---
 
 ## 目录
 - `scripts/keynote_iwa/keynote_tool.py` ★ 读/改 Keynote 原生图表数据、定位页面、核验缺图、补回丢失图片（支持单文件和包格式 .key）
-- `scripts/set_image_borders.py` 全部图片统一成标准边框（#FEAD00/6点/实线/无阴影），改样式引用 + 同步 Metadata
+- `scripts/set_image_borders.py` 全部图片统一成标准边框（#FEAD00/6点/实线/无阴影），改样式引用 + 同步 Metadata；`--only=Slide-xxx.iwa` 只改指定页
 - `scripts/set_frame_strokes.py` 走势图外框/卡片框描边统一成 #FEAD00/6点
 - `scripts/cleanup_episode.py` 定稿后清理一期的中间文件（移到废纸篓，默认只列清单）
 - `scripts/gui_paste_shape.js` 跨页复制形状（如 ▶ 三角），界面拷贝粘贴，需辅助功能权限
 - `scripts/copy_slides.py` 跨期整页复制（Keynote 界面拷贝粘贴，需辅助功能权限）
+- `scripts/replace_slides_online.py` 协作在线文档整页替换/插入（逐步签名校验；只在用户同意改在线文档时用）
+- `scripts/bull_bear_phases.py` 按 20% 规则划分牛熊市（默认合并熊市中的反弹）
 - `scripts/dbms_api.py` 数据工具箱 API v1 只读取数（默认；凭证在 `~/.config/dbms/token`，浏览器登录只作退路）
 - `scripts/keynote_direct.py` Keynote osascript 原语（复制、开、导出、加文字/图片）
 - `code/ppt_engine.py` / `scripts/build_pptx.py` 新画原生图表/表格（python-pptx→key）
