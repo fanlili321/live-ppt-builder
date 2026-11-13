@@ -149,15 +149,18 @@ def _rewrap(b, ts, new_val):
     return b[ts:te] + ev(len(new_val)) + new_val
 
 
-def rebuild_grid(b, G, names, rows):
+def rebuild_grid(b, G, names, rows, new_cols=None):
     fl = G['fl']
     order = [x[0] for x in fl]
     if order != sorted(order):
         raise SystemExit('图表网格字段顺序异常，停止（请改用 Keynote 手动编辑）')
     old_n = sum(1 for x in fl if x[0] == 3)
-    out = bytearray(); d1 = d3 = False
+    out = bytearray(); d1 = d3 = False; ci = 0
     for x in fl:
-        if x[0] == 1:
+        if x[0] == 2 and new_cols is not None:
+            nb = new_cols[ci].encode('utf-8'); ci += 1
+            out += b'\x12' + ev(len(nb)) + nb
+        elif x[0] == 1:
             if not d1:
                 for n in names:
                     nb = n.encode('utf-8'); out += b'\x0a' + ev(len(nb)) + nb
@@ -253,11 +256,16 @@ def cmd_set(a):
     _, cols, _ = grid_table(b, G)
     rows = list(csv.reader(open(a.csv, encoding='utf-8-sig')))
     head, body = rows[0], [r for r in rows[1:] if r and r[0].strip()]
+    new_cols = None
     if [h.strip() for h in head[1:]] != cols:
-        raise SystemExit(f'CSV 系列名 {head[1:]} 与原图 {cols} 不一致')
+        if not getattr(a, 'rename', False):
+            raise SystemExit(f'CSV 系列名 {head[1:]} 与原图 {cols} 不一致（要改系列名请加 --rename）')
+        if len(head[1:]) != len(cols):
+            raise SystemExit(f'--rename 只能改名不能增减系列：CSV {len(head[1:])} 列，原图 {len(cols)} 列')
+        new_cols = [h.strip() for h in head[1:]]
     names = [r[0].strip() for r in body]
     vals = [[(float(v) if v.strip() else None) for v in (r[1:] + [''] * len(cols))[:len(cols)]] for r in body]
-    nb = rebuild_grid(b, G, names, vals)
+    nb = rebuild_grid(b, G, names, vals, new_cols)
     zip_update(a.key, a.out, {n: dump_iwa_bytes(nb)})
     print(f'{n}: 写入 {len(names)} 行（{names[0]} → {names[-1]}）→ {a.out}')
 
@@ -316,6 +324,7 @@ def main():
         x.add_argument('--grid', type=int, default=0); x.add_argument('--out', required=(nm == 'set'))
         if nm == 'set':
             x.add_argument('--csv', required=True)
+            x.add_argument('--rename', action='store_true', help='允许改系列名（数量不变）')
         x.set_defaults(fn=fn)
     x = s.add_parser('text'); x.add_argument('key'); x.add_argument('--slide-file', required=True)
     x.add_argument('--old', required=True); x.add_argument('--new', required=True); x.add_argument('--out', required=True)

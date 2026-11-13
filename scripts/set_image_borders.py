@@ -6,7 +6,8 @@
 文档里还没有标准样式时：先在 Keynote 里手动给任意一张图设好（边框→线条→色板橙黄→6 点），保存后再跑。
 
 用法：
-  python3 set_image_borders.py 输入.key 输出.key [--dry-run]
+  python3 set_image_borders.py 输入.key 输出.key [--dry-run] [--only=Slide-123.iwa,Slide-456.iwa]
+  --only：只改这些页（页里有色带/卡片这类做装饰用的图片时，用它避开）
 之后必须：keynote_tool.py verify 输入 输出（无缺图）→ Keynote 打开导出页图目检。
 注意：图片自带（烤在像素里）的边框不会被去掉，需另外裁图（如二维码黄边约 18px）。
 """
@@ -60,6 +61,8 @@ def style_info(st, ps, pe):
 def main():
     a = [x for x in sys.argv[1:] if not x.startswith('--')]
     dry = '--dry-run' in sys.argv
+    only = [x.split('=', 1)[1].split(',') for x in sys.argv[1:] if x.startswith('--only=')]
+    only = ['Index/' + n for n in only[0]] if only else None
     src, out = a[0], a[1]
     E = kt.read_entries(src)
     st = kt.load_iwa_bytes(E['Index/DocumentStylesheet.iwa'])
@@ -76,6 +79,7 @@ def main():
     meta = bytearray(kt.load_iwa_bytes(E['Index/Metadata.iwa']))
     for k in sorted(E):
         if not (k.startswith('Index/Slide') and k.endswith('.iwa')): continue
+        if only and k not in only: continue
         b = bytearray(kt.load_iwa_bytes(E[k])); dirty = []
         for oid, t, ais, ps, pe in objs(bytes(b)):
             if t != 3005: continue
