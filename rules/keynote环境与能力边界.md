@@ -54,3 +54,16 @@
 - **文本框内边距**在形状样式里（486 期 P12 用的样式 inset 5.625，基础样式 4）；同一组页面要用同一个形状样式。
 - **⚠️ 样式引用只能换成该页 `Metadata.iwa` 外部引用里已有的样式**：换成未登记的样式编号，Keynote 打开即崩溃（CFHash / TSWPFontHeightInfoForFont）。要么换成已登记的，要么直接改 `DocumentStylesheet.iwa` 里那个样式的数值。改前留备份，崩溃了用备份还原。
 - 等长替换最安全；字段长度变了要同步改外层 message 的长度字节（varint），否则文件损坏。
+
+## 487 期补充（2026-11-16）
+### 界面自动化（GUI）
+- **动手前先确认用户没在用电脑**：`ioreg -c IOHIDSystem | awk '/HIDIdleTime/ {print int($NF/1000000000); exit}'` 大于 20 秒才做点击/粘贴类操作；用户正在操作就停下等，不抢鼠标。
+- **Keynote 窗口可能在外接显示器上**：坐标会是负数（如外接屏在左：画布左上 L=-1526, T=452）。每次 GUI 前重新截屏量 L/T/S；`scripts/gui_axis.js` 已按 L/T 相对 (273,328) 的偏移换算面板位置。点到别的窗口（如 Claude）= 坐标过期。
+- **批注便利贴会挡住点击**：点图表时避开便利贴所在位置（选图表空白处或另一端的数据点）。
+- 颜色面板里按 Esc 会取消当前系列选中，要重新选系列再开描边面板。
+- 纵轴范围：`scripts/gui_axis.js`；新建文字框左对齐：`scripts/gui_align_left.js`（均在 skill scripts/）。
+### AppleScript / 页面
+- `set base slide` 换版式后，隐藏的正文占位符会重新出现：紧接着 `set body showing of slide N to false`。
+- `delete shape` 在本机会删错对象（删到相邻形状或标题）：不用的形状移出画布（y≥1300），不删。表格、图片、文字删除正常。
+- **画布外的参考图会伸进页面**：用户常把参考截图放在页面上方外面，下边缘一旦 >0 就会出现在导出图顶部。每次导出后检查每页 `position` 的 y<0 且 y+height>0 的对象。
+- 协作在线文档（包格式，含 ActivityStream/OperationStorage）可用 `keynote_tool.py charts/get/verify` **只读**读取图表数据；AppleScript 读文字表格、导出页图也不改文件。终审核对以在线文档为准（用户上传后常在线上继续改）。

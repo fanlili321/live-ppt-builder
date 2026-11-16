@@ -25,6 +25,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 ## Step 1 读大纲（飞书）
 - 用户没给链接：在「每周直播大纲」文件夹（token 见 `rules/大纲与历史成品库.md`）按期数找，**优先「（已确认）」版本**；同期多份时先问用户。
 - 用 `lark-doc` 的 `docs +fetch` 读全文（含 `## 大纲` 下每个 `###` = 一页），图片用 `+media-download` 下载看。
+- **大纲批注也要读**（`docs +fetch` 默认带评论）：老板/领导会在大纲里加批注提新要求（487 期王磊批注要求补一页 2026 年以来四个指数走势+最大回撤），开工和每次用户说「看下大纲」时都重读一遍批注。
 - 每页逐句读完，记下：标题原文、页内文字、红字要求（=要改的地方）、气泡文字、「第NNN期直播第X页」、「数据待更新」、参考资料、过程说明。**图片旁边的文字也是页面内容，不能只贴图**（468 期教训）。
 
 ## Step 2 逐页映射（内部工作表，不整份发用户确认）
@@ -114,7 +115,7 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 2. Keynote 打开成品，`export ... as slide images`，逐页 Read：数据、日期、标注、页码、无空白图、无溢出。与底稿导出图逐页对比，确认没改到计划外的页。
 3. 样式检查：按 `rules/样式规范_485定稿实测.md` 读所有文字的字体/字号/颜色（AppleScript `font/size/color of character 1 of object text`），非思源字体、字号不在表内的列出来。
 4. 口径一致性检查（最容易出错）：同一指标在不同页的数字一致（例：P9/P11/P24 的最大回撤）；同页「最高价」与「最大涨幅」用同一价格口径；正文数字与图上标注一致；总结页数字与正文一致。
-5. 每张走势图做「四点」核对（开始/结束/最高/最低 + 日期，与 Wind/指数公司对比）并记入过程记录；再按 `rules/老板反馈规则.md` 第一节补充项自查。
+5. 每张走势图做「四点」核对（开始/结束/最高/最低 + 日期），**用 Wind MCP 独立取数**（`scripts/wind_spotcheck.py`，作图用工具箱、复核换来源，见 `rules/复核记录与交付.md`「终审用独立来源复核」）并记入过程记录；再按 `rules/老板反馈规则.md` 第一节补充项自查。
 6. 走 `ppt-review` 做成品复核（可直接用它的 `scripts/review_deck.py styles / export-images` 导出字体字号数据和每页图；字号以 `rules/样式规范_485定稿实测.md` 为准）。
 
 ## Step 7 交付流程（4 个环节，每个环节存一版：v1 初稿 → v2 给领导 → v3 领导反馈后 → 定稿）
@@ -147,7 +148,10 @@ description: 银行螺丝钉每周直播 Keynote 制作（v3，历史成品为�
 ## 目录
 - `scripts/keynote_iwa/keynote_tool.py` ★ 读/改 Keynote 原生图表数据、定位页面、核验缺图、补回丢失图片（支持单文件和包格式 .key）
 - `scripts/set_image_borders.py` 全部图片统一成标准边框（#FEAD00/6点/实线/无阴影），改样式引用 + 同步 Metadata；`--only=Slide-xxx.iwa` 只改指定页
-- `scripts/set_frame_strokes.py` 走势图外框/卡片框描边统一成 #FEAD00/6点
+- `scripts/swap_series_style.py` 等：改系列颜色的辅助脚本（规则：同一套 PPT 一个指数只用一种颜色，见 `rules/走势图配色与指数代码.md`）
+- `scripts/gui_axis.js` / `gui_align_left.js` 界面设纵轴范围、新文字框左对齐（GUI 前先查用户空闲，见 `rules/keynote环境与能力边界.md` 487 期补充）
+- `scripts/wind_spotcheck.py` 终审用 Wind 独立逐日核对；`scripts/final_audit_例487.py` 终审脚本模板
+- `scripts/set_frame_strokes.py` 走势图外框/卡片框描边统一成 #FEAD00/6点（会误改 U 形曲线等粗线形状，跑完逐页比对底稿）
 - `scripts/cleanup_episode.py` 定稿后清理一期的中间文件（移到废纸篓，默认只列清单）
 - `scripts/gui_paste_shape.js` 跨页复制形状（如 ▶ 三角），界面拷贝粘贴，需辅助功能权限
 - `scripts/copy_slides.py` 跨期整页复制（Keynote 界面拷贝粘贴，需辅助功能权限）
