@@ -67,3 +67,13 @@
 - `delete shape` 在本机会删错对象（删到相邻形状或标题）：不用的形状移出画布（y≥1300），不删。表格、图片、文字删除正常。
 - **画布外的参考图会伸进页面**：用户常把参考截图放在页面上方外面，下边缘一旦 >0 就会出现在导出图顶部。每次导出后检查每页 `position` 的 y<0 且 y+height>0 的对象。
 - 协作在线文档（包格式，含 ActivityStream/OperationStorage）可用 `keynote_tool.py charts/get/verify` **只读**读取图表数据；AppleScript 读文字表格、导出页图也不改文件。终审核对以在线文档为准（用户上传后常在线上继续改）。
+
+## 487 期（5星级）补充（2026-11-17）
+- 图表系列数可增减：`scripts/set_cols.py`（改列数，复用原列 ID）、`scripts/set_drop_col.py`（删某一列）；新增系列沿用图表已有样式槽。
+- 折线线宽：系列样式在 DocumentStylesheet（type 5028），10000 下第 48 号字段是折线宽度：`scripts/set_line_width.py in out 6 48 Slide-xxx.iwa …`。系列样式多页共用，改一页会连带别页；只改一页时请用户在界面改。
+- 值轴范围：`scripts/set_axis_range.py in out Slide-x.iwa grid 轴序号 min max`（值轴 nonstyle type 5027，min=18.1、max=17.1；图表信息 field 14 列出 Y1/Y2 轴）。Keynote 刻度条数自动（实测 1.5 个百分点只画 2 段），0 线不一定能出现。
+- 图表类型 field 1（10=混合、11=双轴）；面积改柱形不能只改 field 1（坐标轴会跑到左边、格式错乱），请用户在界面「序列」里改。
+- 双轴叠加图首选：复制本期已有 Keynote 原生双轴页换数据，不用 python-pptx（用户 2026-11-17 明确：不要出现 PPT 格式，要直接编辑 Keynote）。
+- 双图并排页：原生图表各放一张跳过页，可见页贴导出图片（用户 2026-11-17 定）。
+- 协作在线文档的本地副本：`cp -R` 后用 Keynote `save … in` 另存为普通 .key 再改。
+- 界面代点前必须截屏确认前台是目标窗口（487 期两次前台是微信/在线文档/飞书）；用户空闲 <15 秒不点。
