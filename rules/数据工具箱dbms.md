@@ -64,3 +64,4 @@
 - 已知异常：2026-11-13 工具箱缺「创业板」整行（11-10~11-12 都有）；同日科创50 ROE 记为 13.00%（前两日 9.06%/9.07%，估值表 6.32÷69.22=9.13%）。
 
 - **两融（2026-11-18 实测）**：开放接口 `GET /margin-balance/series` 已并入 `index:query`，现有凭证可调；参数 begin/end 无效，返回 `data.records` 全序列（4038 条，2010-03-31 起）。最新日期看 `data.latestDate`；要更新到最新需用户在网页点「立即同步」。
+- **估值百分位（2026-11-19 实测）**：`GET /valuations/dingda beginDate=… endDate=…`（不传 indexCode 返回当日全部约 63 个指数）带 `pePercentR5y/pePercentR10y/pbPercentR5y/pbPercentR10y`。**估值走势页（如 488 期 P8 中证800 PE/PB）的数据一律从工具箱取**：走势用 `/valuations/daily`，近5年/近10年分位数用 `/valuations/dingda`，与走势同一截止日；不从其他页的截图上抄，不自己用 PE 序列算，不留「待补」。`/valuations/daily` 没有分位数字段。
