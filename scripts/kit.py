@@ -59,6 +59,12 @@ class Layer:
     def line(self, x1, y1, x2, y2, color, width):
         self.ops.append(('line', x1, y1, x2, y2, color, width)); return self
 
+    def img(self, path, x, y, w, h, border=6, color=None):
+        """把截图/二维码连同标准边框（#FEAD00 6pt）烤进底图。
+        用于「底图（框、卡片）要压在图片下面」的情况：Keynote 脚本不能复制图片、不能调层级，
+        新插入的底图会盖住原有图片，只能把图片一起画进底图（488 期 P18）。图片按 w×h 拉伸，先自己裁好比例。"""
+        self.ops.append(('img', path, x, y, w, h, border, color or FRAME)); return self
+
     def bbox(self):
         xs, ys = [], []
         for o in self.ops:
@@ -69,6 +75,8 @@ class Layer:
                 xs += [p[0] for p in o[1]]; ys += [p[1] for p in o[1]]
             elif o[0] == 'line':
                 xs += [o[1] - o[6], o[3] + o[6]]; ys += [o[2] - o[6], o[4] + o[6]]
+            elif o[0] == 'img':
+                b = o[6] / 2; xs += [o[2] - b, o[2] + o[4] + b]; ys += [o[3] - b, o[3] + o[5] + b]
         return int(min(xs)) - 2, int(min(ys)) - 2, int(max(xs)) + 3, int(max(ys)) + 3
 
     def render(self):
@@ -91,6 +99,12 @@ class Layer:
             elif o[0] == 'line':
                 _, a1, b1, a2, b2, col, wd = o
                 d.line([T(a1, b1), T(a2, b2)], fill=rgb(col), width=int(wd * S))
+            elif o[0] == 'img':
+                _, f, x, y, w, h, b, col = o
+                if b:
+                    d.rectangle([T(x - b / 2, y - b / 2), tuple(v - 1 for v in T(x + w + b / 2, y + h + b / 2))], fill=rgb(col))
+                src = Image.open(f).convert('RGBA').resize((int((w - b) * S), int((h - b) * S)), Image.LANCZOS)
+                im.paste(src, tuple(int(v) for v in T(x + b / 2, y + b / 2)))
         path = os.path.join(ASSET, self.name + '.png'); im.save(path)
         return path, (x0, y0, W, H)
 
