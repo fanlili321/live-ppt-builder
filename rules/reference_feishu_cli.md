@@ -7,9 +7,9 @@ metadata:
   originSessionId: 0916e9f5-463b-48e5-94e4-b00430082a93
 ---
 
-读取用户的飞书文档/表格，**用本地 `lark-cli`**（路径 `/Users/fanlili/.npm-global/bin/lark-cli`，配置在 `~/.lark-cli/config.json`），这是稳定通道，不依赖 Claude for Chrome 浏览器扩展（扩展会频繁掉线，user 用的浏览器也不一定装了扩展）。
+读取用户的飞书文档/表格，**用本地 `lark-cli`**（`npm i -g` 安装后在 PATH 里；`which lark-cli` 查路径，配置在 `~/.lark-cli/config.json`），这是稳定通道，不依赖 Claude for Chrome 浏览器扩展（扩展会频繁掉线，user 用的浏览器也不一定装了扩展）。
 
-调用前设 `export PATH="/Users/fanlili/.npm-global/bin:$PATH" LARK_CLI_NO_PROXY=1`（避免代理警告/串改）。
+调用前设 `export PATH="$(npm prefix -g)/bin:$PATH" LARK_CLI_NO_PROXY=1`（避免代理警告/串改）。
 
 常用：
 - 文档纯文本：`lark-cli api GET /open-apis/docx/v1/documents/{doc_token}/raw_content --jq '.data.content'`

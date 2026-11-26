@@ -77,7 +77,7 @@
 ## 五、本机（汤爱学 Mac）Keynote 操作说明
 - Keynote 是 `Keynote Creator Studio.app`（沙盒版）。**AppleScript `open POSIX file` 打不开文件**：先 `xattr -c`，用 shell `open -a "/Applications/Keynote Creator Studio.app" 文件.key` 打开，再 `first document whose name is "文件.key"` 拿引用；`copy_slides.py` 运行前也先把 src/dst 都 `open -a` 打开。卡住先查对话框（System Events 读 static text）。
 - 同一个 .key 的副本文档 ID 相同，**不能同时打开**。要从旧版/定稿拷页时：解包副本，把 `Metadata/DocumentIdentifier` 换成新 `uuidgen`（不带换行），再 `zip -0` 回 .key，就能和正在用的文件同时开（第27期恢复误删页实测）。
-- 主 skill 脚本写死了 `/Users/fanlili/...` 的 sys.path：运行时加 `PYTHONPATH=~/.claude/skills/live-ppt-builder/scripts:~/.claude/skills/live-ppt-builder/scripts/keynote_iwa`。
+- 主 skill 脚本的 sys.path 已改为按脚本所在目录查找（2026-11-26），不用再加 PYTHONPATH。
 - 本机没有「图片素材库 library.db」：核对页码直接用来源期 PDF（PDF 页码 = 跳过页以外的第 N 张）。
 - **改对象先列清单**：`shape k` / `text item k` 序号增删后会错位（第27期曾把页标题当小形状放大、删掉）。先列 `iWork items`（序号、类别、位置、尺寸、文字），按 `iWork item N` 操作并先校验；每删一次重新列。AppleScript 变量名不分大小写（`P` 和 `p` 是同一个），别撞名。
 - 批注在 `iWork items` 里显示成 450×263 的 shape（文字=批注内容），不要删、不要移，出界检查时排除。

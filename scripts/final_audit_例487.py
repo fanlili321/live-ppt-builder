@@ -3,7 +3,7 @@
 """
 import csv, json, os, subprocess, datetime as dt
 
-D = os.path.expanduser('~/.claude/skills/live-ppt-builder/scripts/dbms_api.py')
+D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dbms_api.py')
 A = 'data/audit'
 
 

@@ -1,8 +1,9 @@
 """把指定幻灯片里图表系列样式的折线描边宽度改成 W：python3 set_line_width.py in.key out.key W field Slide-xxx.iwa ...
 系列样式在 DocumentStylesheet.iwa（type 5028），描边在 10000 下的 field（默认 86）。"""
+import os
 import sys,struct
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts')
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 import keynote_tool as k, find_strokes as fs
 from pb import ev
 src,dst,W,field=sys.argv[1],sys.argv[2],float(sys.argv[3]),int(sys.argv[4]);slides=sys.argv[5:]

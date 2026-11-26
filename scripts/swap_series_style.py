@@ -1,6 +1,7 @@
 # 对调某页图表里两个系列样式的引用（等长 varint 才换），只改这一个 slide iwa
+import os
 import sys
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 from keynote_tool import read_entries,load_iwa_bytes,dump_iwa_bytes,zip_update
 from pb import ev
 key,slide,a,b_,out=sys.argv[1],sys.argv[2],int(sys.argv[3]),int(sys.argv[4]),sys.argv[5]

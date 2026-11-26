@@ -1,7 +1,8 @@
 """写图表数据并删掉一个系列列：python3 set_drop_col.py key slide.iwa grid csv drop_idx out
 保留其余列的列ID（及其 index 值顺延），列名按 CSV 表头。"""
+import os
 import sys,csv,uuid
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 import keynote_tool as k
 from pb import ev
 key,sf,gi,cf,drop,out=sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6]
