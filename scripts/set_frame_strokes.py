@@ -7,7 +7,8 @@
 跑完必须和底稿逐页比对导出图，误改的页整页从底稿重拷回来。
 描边是从父样式继承来的（样式自身没写描边）时不改，会打印出来，需在 Keynote 里手动改一个后再跑。
 
-用法：python3 set_frame_strokes.py 输入.key 输出.key [--dry-run]
+用法：python3 set_frame_strokes.py 输入.key 输出.key [--dry-run] [--skip=Slide-1.iwa,Slide-2.iwa]
+  --skip：跳过这些页（如 482·P12 的 U 形估值曲线页，490 期起先 --dry-run 看清每个样式用在哪页，曲线页一律 skip）
 之后：keynote_tool.py verify 输入 输出 → 打开导出页图目检。
 """
 import sys, os, struct
@@ -39,6 +40,7 @@ def sub(b, s, e, fn):
 def main():
     a = [x for x in sys.argv[1:] if not x.startswith('--')]
     dry = '--dry-run' in sys.argv
+    skip = set(sum([x.split('=',1)[1].split(',') for x in sys.argv[1:] if x.startswith('--skip=')], []))
     src, out = a[0], a[1]
     E = kt.read_entries(src)
     st = bytearray(kt.load_iwa_bytes(E['Index/DocumentStylesheet.iwa']))
@@ -65,6 +67,7 @@ def main():
     targets, skipped = {}, []
     for k in sorted(E):
         if not (k.startswith('Index/Slide') and k.endswith('.iwa')): continue
+        if k.split('/')[-1] in skip: continue
         b = kt.load_iwa_bytes(E[k])
         for oid, t, ps, pe in objs(b):
             if t != 2011: continue
