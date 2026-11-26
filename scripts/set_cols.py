@@ -1,7 +1,8 @@
 """写图表数据，列数可增可减：python3 set_cols.py key slide.iwa grid csv out
 保留原有列ID（按顺序复用），多出的列新建UUID；少的列丢弃末尾。"""
+import os
 import sys,csv,uuid
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 import keynote_tool as k
 from pb import ev
 key,sf,gi,cf,out=sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],sys.argv[5]

@@ -1,5 +1,6 @@
+import os
 import sys,struct,collections
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 from keynote_tool import read_entries,load_iwa_bytes,entry_name
 key=sys.argv[1]; only=sys.argv[2:] 
 ents=read_entries(key)

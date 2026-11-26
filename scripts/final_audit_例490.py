@@ -5,7 +5,7 @@
   3. python3 scripts/final_audit_例490.py → 每项「一致/不一致」，结果存 data/audit/result.json
 """
 import csv,json,os,subprocess,datetime as dt
-D=os.path.abspath('../../.agents/skills/live-ppt-builder/scripts/dbms_api.py'); A='data/audit'
+D=os.path.join(os.path.dirname(os.path.abspath(__file__)),'dbms_api.py'); A='data/audit'
 def fetch(code,start,end):
     fn=f'{A}/src_{code}_{start}_{end}.json'
     if os.path.exists(fn): return json.load(open(fn))

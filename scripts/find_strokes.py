@@ -1,5 +1,6 @@
+import os
 import sys,struct
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 import keynote_tool as k
 from pb import rv,fields,ev,objects
 def is_color(b,s,e):

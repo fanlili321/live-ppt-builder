@@ -1,7 +1,8 @@
 """设定图表值轴 min/max：python3 set_axis_range.py in.key out.key Slide-x.iwa grid axisIdx min max  (min/max 用 'none' 跳过)
 值轴 nonstyle（type 5027）引用在图表信息的 field 14；min=field 18.1，max=field 17.1（double）。"""
+import os
 import sys,struct
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts/keynote_iwa')
+sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'keynote_iwa'))
 import keynote_tool as k
 from pb import rv,fields,ev
 src,dst,sf,gi,ai,mn,mx=sys.argv[1:8];gi=int(gi);ai=int(ai)

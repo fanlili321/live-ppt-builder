@@ -100,7 +100,7 @@ def add_chart(rownames, series, colseries, x, y, w, h, md=False):
     return (f'tell s\nadd chart row names {rn} column names {cols_sparse(colseries, 7, md)} data {data} type line_2d group by chart row\nend tell\n'
             f'set c to last chart of s\nset position of c to {{{x}, {y}}}\nset width of c to {w}\nset height of c to {h}')
 
-BRAND_TPL = "/Users/fanlili/Desktop/范丽丽./图/直播ppt/2025.8【指数系列ppt模版】.key"
+BRAND_TPL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "品牌模板", "2025.8【指数系列ppt模版】.key")
 def build_cover():
     # 跨文档：打开品牌模板，复制其封面(slide1)到myDoc末尾，关模板
     script = f'''tell application "Keynote"

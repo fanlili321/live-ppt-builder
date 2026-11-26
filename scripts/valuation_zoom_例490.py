@@ -2,8 +2,9 @@
 #   整张估值表（右侧基金代码列打码）+ 表头放大条紧贴在该指数放大条正上方（两条连成一块）+ 表上该指数行红框 + 红虚线连到放大块；左侧标题 + 浅橙气泡。
 #   kit 图层（表格、放大条带 #FEAD00 6pt 边烤进图层）+ 原生气泡文字。用法见文件末尾 page(...) 调用：行号=该指数行在原图的 y 范围，strip_y=放大块顶部 y。
 #   新图层插入后会盖住旧文字：界面里选中图层 → 排列 ▸ 移到最后面。
+import os
 import sys
-sys.path.insert(0,'/Users/fanlili/.claude/skills/live-ppt-builder/scripts')
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from kit import *
 from PIL import Image
 DOC=sys.argv[1]
